@@ -2,99 +2,124 @@ import streamlit as st
 from PIL import Image
 import requests
 from io import BytesIO
-import openai
 
-# --- OpenAI API Key ---
-openai.api_key = "DEIN_OPENAI_API_KEY_HIER"
-
-# --- Seitenlayout ---
+# --- Seiteneinstellungen ---
 st.set_page_config(
-    page_title="Modeberater",
+    page_title="Modeberater Deluxe",
     page_icon="👗",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- Style (dunkel, Magazin-Ästhetik) ---
 st.markdown("""
 <style>
 body {
-    background-color: #1C1C1C;
-    color: #EDEDED;
+    background-color: #1c1c1c;
+    color: #f5f5f5;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
-.stButton>button {
-    background-color: #FF6F61;
-    color: white;
-    font-weight: bold;
-}
-.stSidebar {
-    background-color: #2C2C2C;
-}
 h1, h2, h3 {
-    color: #FF6F61;
+    color: #ffffff;
+}
+.stButton>button {
+    background-color: #ff4081;
+    color: white;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
+}
+.stSelectbox>div>div>div>select {
+    background-color: #2b2b2b;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("👗 Modeberater Deluxe")
+st.title("👗 Fashion Advisor Deluxe – Magazin Style")
 
-# --- Sprachwahl ---
-language = st.sidebar.selectbox("Sprache / Language", ["Deutsch", "English", "Français", "Italiano", "Español", "Arabisch", "Mandarin", "Serbisch"])
+# --- Sidebar Filter ---
+st.sidebar.header("Filter deine Outfits")
 
-# --- Filter Sidebar ---
-st.sidebar.header("Filter")
-geschlecht = st.sidebar.selectbox("Geschlecht", ["Männlich", "Weiblich", "Divers"])
-jahreszeit = st.sidebar.selectbox("Jahreszeit", ["Frühling", "Sommer", "Herbst", "Winter"])
-anlass = st.sidebar.multiselect("Anlass", ["Schule", "Arbeit", "Party", "Freizeit", "Date", "Sport"])
-budget = st.sidebar.slider("Budget (€)", 10, 1000, (50, 300))
-material = st.sidebar.multiselect("Material", ["Baumwolle", "Seide", "Wolle", "Leder", "Polyester", "Jeans"])
-farben = st.sidebar.multiselect(
-    "Farben auswählen",
-    ["Schwarz","Weiß","Rot","Blau","Gelb","Grün","Rosa","Lila","Orange","Beige","Braun","Türkis","Gold","Silber","Dunkelblau","Bordeaux"],
-    default=["Schwarz"]
+# Geschlecht
+gender = st.sidebar.radio("Geschlecht:", ["Keine Auswahl", "Männlich", "Weiblich", "Divers"])
+
+# Anlass
+occasion = st.sidebar.multiselect(
+    "Anlass:",
+    ["Alltag", "Schule", "Arbeit", "Party", "Sport", "Abendessen", "Shopping", "Date", "Urlaub"]
 )
 
-wetter = st.sidebar.selectbox("Wetter", ["Sonnig", "Regen", "Schnee", "Windig", "Bewölkt"])
-temperatur = st.sidebar.slider("Temperatur (°C)", -20, 40, 20)
+# Jahreszeit
+season = st.sidebar.selectbox("Jahreszeit:", ["Keine Auswahl", "Frühling", "Sommer", "Herbst", "Winter"])
 
-# --- Optional: KI-Generierte Bildfunktion ---
-def generate_outfit_image(prompt):
-    try:
-        response = openai.Image.create(
-            prompt=prompt,
-            n=1,
-            size="512x512"
-        )
-        image_url = response['data'][0]['url']
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-        return img
-    except Exception as e:
-        st.error(f"Fehler beim Generieren des Bildes: {e}")
-        return None
+# Material
+material = st.sidebar.multiselect(
+    "Material:",
+    ["Baumwolle", "Seide", "Wolle", "Leinen", "Leder", "Polyester", "Mischgewebe", "Denim"]
+)
 
-# --- Outfit-Generator ---
-if st.button("Outfit generieren"):
-    # Text-Prompt für KI
-    prompt_text = f"Erstelle ein modisches Outfit für {geschlecht}, Jahreszeit: {jahreszeit}, Anlass: {', '.join(anlass)}, Budget: {budget}, Material: {', '.join(material)}, Farben: {', '.join(farben)}, Wetter: {wetter}, Temperatur: {temperatur}°C, im Stil einer eleganten Modezeitschrift."
+# Budget
+budget = st.sidebar.slider("Budget (€):", 0, 1000, (0, 200))
 
-    st.subheader("Vorgeschlagenes Outfit")
-    st.markdown(f"**Beschreibung:** {prompt_text}")
+# Wetter
+weather = st.sidebar.multiselect("Wetter:", ["Sonnig", "Regnerisch", "Schnee", "Windig", "Kalt", "Warm"])
 
-    # KI-Bild generieren
-    img = generate_outfit_image(prompt_text)
-    if img:
-        st.image(img, caption="KI-generiertes Outfit", use_column_width=True)
+# Farben
+st.sidebar.subheader("Farben auswählen:")
+colors_dict = {
+    "Schwarz": "#000000", "Weiß": "#FFFFFF", "Rot": "#FF0000", "Blau": "#0000FF",
+    "Grün": "#00FF00", "Gelb": "#FFFF00", "Pink": "#FFC0CB", "Lila": "#800080",
+    "Orange": "#FFA500", "Beige": "#F5F5DC", "Braun": "#A52A2A", "Grau": "#808080"
+}
 
-# --- Feedback-Funktion ---
-st.subheader("Feedback geben")
-feedback_text = st.text_area("Was gefällt dir am Outfit? Was sollte besser sein?")
+selected_colors = []
+for name, hex_code in colors_dict.items():
+    if st.sidebar.checkbox(f"{name}", key=name):
+        selected_colors.append((name, hex_code))
+
+# Temperatur
+temperature = st.sidebar.slider("Temperatur (°C):", -20, 40, (0, 25))
+
+# --- Main Content ---
+st.subheader("Dein perfektes Outfit")
+
+# Optional: OpenAI-Key
+openai_key = st.sidebar.text_input("OpenAI API Key (optional):", type="password")
+
+# Beispielhafte Outfit-Daten
+import random
+outfits = [
+    {"Name": "Eleganter Anzug", "Bild": "https://i.ibb.co/PrPj0XY/suit.jpg", "Beschreibung": "Perfekt für Arbeit oder Business."},
+    {"Name": "Sommerkleid", "Bild": "https://i.ibb.co/3mYyVZ1/summer-dress.jpg", "Beschreibung": "Leicht und luftig für den Sommer."},
+    {"Name": "Sportoutfit", "Bild": "https://i.ibb.co/cXxjW1S/sport.jpg", "Beschreibung": "Ideal für Fitness und Sport."},
+    {"Name": "Casual Jeans & T-Shirt", "Bild": "https://i.ibb.co/KWqgRkQ/casual.jpg", "Beschreibung": "Alltagstauglich und bequem."}
+]
+
+# Filter Logik (vereinfachtes Beispiel)
+filtered_outfits = []
+for outfit in outfits:
+    if gender != "Keine Auswahl" and gender.lower() not in outfit["Name"].lower():
+        continue
+    if season != "Keine Auswahl" and season.lower() not in outfit["Beschreibung"].lower():
+        continue
+    filtered_outfits.append(outfit)
+
+# Anzeige
+cols = st.columns(2)
+for i, outfit in enumerate(filtered_outfits):
+    with cols[i % 2]:
+        st.image(outfit["Bild"], use_column_width=True)
+        st.markdown(f"**{outfit['Name']}**")
+        st.write(outfit["Beschreibung"])
+
+# Feedback
+st.subheader("Feedback zum Outfit")
+feedback = st.text_area("Schreibe uns, wie dir das Outfit gefällt:")
+
 if st.button("Feedback absenden"):
-    st.success("Danke für dein Feedback!")
+    if feedback:
+        st.success("Danke für dein Feedback!")
+    else:
+        st.warning("Bitte schreibe etwas Feedback, bevor du absendest!")
 
-# --- Farb-Preview ---
-st.subheader("Ausgewählte Farben")
-cols = st.columns(len(farben))
-for i, farbe in enumerate(farben):
-    cols[i].markdown(f"<div style='background-color:{farbe.lower()};padding:20px;border-radius:5px;text-align:center;color:white;'>{farbe}</div>", unsafe_allow_html=True)
+# Hinweis: OpenAI-Bildgenerierung kann hier eingebaut werden, wenn API-Key vorhanden ist.
