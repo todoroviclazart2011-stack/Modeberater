@@ -1,229 +1,148 @@
 import streamlit as st
-from PIL import Image
-import random
+from random import choice
 
-# --- Mehrsprachig ---
-sprachwahl = st.sidebar.selectbox("Sprache / Language", ["Deutsch", "English", "Français", "Italiano"])
+# --- Seite ---
+st.set_page_config(page_title="Vogue Fashion Outfit Generator", layout="wide", page_icon="👗")
 
-texts = {
-    "Deutsch": {
-        "title": "👗 Modeberater Deluxe",
-        "filter": "Filter auswählen",
-        "gender": "Geschlecht",
-        "season": "Jahreszeit",
-        "occasion": "Anlass",
-        "weather": "Wetter",
-        "temperature": "Temperatur (°C)",
-        "budget": "Budget",
-        "material": "Material",
-        "pattern": "Muster",
-        "accessories": "Accessoires",
-        "colors": "Farben",
-        "optional": "Optionale Filter anzeigen",
-        "outfits": "💃 Generierte Outfits",
-        "feedback": "📝 Feedback",
-        "feedback_placeholder": "Gib hier dein Feedback zu den Outfits ein:",
-        "feedback_submit": "Feedback absenden",
-        "feedback_thanks": "Danke für dein Feedback!",
-        "no_outfits": "Keine Outfits gefunden. Versuche andere Filter!"
-    },
-    "English": {
-        "title": "👗 Deluxe Fashion Advisor",
-        "filter": "Choose Filters",
-        "gender": "Gender",
-        "season": "Season",
-        "occasion": "Occasion",
-        "weather": "Weather",
-        "temperature": "Temperature (°C)",
-        "budget": "Budget",
-        "material": "Material",
-        "pattern": "Pattern",
-        "accessories": "Accessories",
-        "colors": "Colors",
-        "optional": "Show optional filters",
-        "outfits": "💃 Generated Outfits",
-        "feedback": "📝 Feedback",
-        "feedback_placeholder": "Give your feedback on the outfits:",
-        "feedback_submit": "Submit Feedback",
-        "feedback_thanks": "Thanks for your feedback!",
-        "no_outfits": "No outfits found. Try different filters!"
-    },
-    "Français": {
-        "title": "👗 Conseiller Mode Deluxe",
-        "filter": "Choisir des filtres",
-        "gender": "Genre",
-        "season": "Saison",
-        "occasion": "Occasion",
-        "weather": "Temps",
-        "temperature": "Température (°C)",
-        "budget": "Budget",
-        "material": "Matériel",
-        "pattern": "Motif",
-        "accessories": "Accessoires",
-        "colors": "Couleurs",
-        "optional": "Afficher les filtres optionnels",
-        "outfits": "💃 Tenues générées",
-        "feedback": "📝 Retour",
-        "feedback_placeholder": "Donnez votre avis sur les tenues:",
-        "feedback_submit": "Envoyer le feedback",
-        "feedback_thanks": "Merci pour votre avis!",
-        "no_outfits": "Aucune tenue trouvée. Essayez d'autres filtres!"
-    },
-    "Italiano": {
-        "title": "👗 Consulente di Moda Deluxe",
-        "filter": "Seleziona filtri",
-        "gender": "Genere",
-        "season": "Stagione",
-        "occasion": "Occasione",
-        "weather": "Meteo",
-        "temperature": "Temperatura (°C)",
-        "budget": "Budget",
-        "material": "Materiale",
-        "pattern": "Fantasia",
-        "accessories": "Accessori",
-        "colors": "Colori",
-        "optional": "Mostra filtri opzionali",
-        "outfits": "💃 Outfit generati",
-        "feedback": "📝 Feedback",
-        "feedback_placeholder": "Lascia il tuo feedback sugli outfit:",
-        "feedback_submit": "Invia Feedback",
-        "feedback_thanks": "Grazie per il tuo feedback!",
-        "no_outfits": "Nessun outfit trovato. Prova altri filtri!"
-    }
-}
-
-t = texts[sprachwahl]
-
-# --- Page Config & Design ---
-st.set_page_config(page_title=t["title"], layout="wide", page_icon="👗")
-
-# Custom CSS für Vogue-Style
+# --- CSS für Vogue-Look ---
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto&display=swap');
-
 body {
-    background-color: #fdf6f0;
+    background: linear-gradient(to right, #f8f8f8, #eaeaea);
     font-family: 'Roboto', sans-serif;
-    color: #222;
 }
-
 h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 50px;
+    font-size: 3rem;
     text-align: center;
-    color: #111;
+    color: #222;
+    margin-bottom: 1rem;
 }
-
-h2 {
-    font-family: 'Playfair Display', serif;
-    color: #333;
+.outfit-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
 }
-
-.stButton>button {
-    background-color: #d67d0a;
-    color: white;
-    font-weight: bold;
-    border-radius: 10px;
-    padding: 10px;
-    border: none;
+.outfit-card:hover {
+    transform: scale(1.02);
 }
-
-.stButton>button:hover {
-    background-color: #b65e05;
-    color: #fff;
-    transform: scale(1.05);
-    transition: 0.3s;
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 30px;
 }
-
-.stSelectbox, .stSlider, .stMultiselect, .stTextArea {
-    border-radius: 8px;
-    padding: 5px;
-    background-color: #fff;
+.filter-item {
+    background: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
 }
-
-.outfit-container {
-    border-radius: 15px;
-    padding: 15px;
-    background-color: #fff3e6;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.color-box {
-    display: inline-block;
-    width: 25px;
-    height: 25px;
+.color-circle {
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
+    display: inline-block;
     margin-right: 5px;
-    border: 1px solid #ccc;
+    cursor: pointer;
+    border: 2px solid #ccc;
+}
+.language-select {
+    text-align: right;
+    margin-bottom: 20px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown(f"<h1>{t['title']}</h1>", unsafe_allow_html=True)
+# --- Sprache auswählen ---
+language = st.selectbox("Sprache / Language / Langue:", ["Deutsch", "English", "Français"], key="lang")
 
-# --- Sidebar Filters ---
-st.sidebar.header(t["filter"])
-geschlecht = st.sidebar.selectbox(t["gender"], ["Beliebig", "Männlich", "Weiblich", "Divers"])
-jahreszeit = st.sidebar.selectbox(t["season"], ["Beliebig", "Frühling", "Sommer", "Herbst", "Winter"])
-anlass = st.sidebar.multiselect(t["occasion"], ["Schule", "Party", "Arbeit", "Casual", "Sport", "Date"])
-wetter = st.sidebar.selectbox(t["weather"], ["Beliebig", "Sonnig", "Regnerisch", "Schnee", "Windig"])
-temperatur = st.sidebar.slider(t["temperature"], -10, 40, (10, 25))
-budget = st.sidebar.selectbox(t["budget"], ["Beliebig", "Günstig", "Mittel", "Teuer"])
-material = st.sidebar.multiselect(t["material"], ["Baumwolle", "Wolle", "Seide", "Leder", "Synthetik", "Denim"])
+# --- Titel ---
+st.markdown("<h1>Vogue Fashion Outfit Generator</h1>", unsafe_allow_html=True)
 
-farben = ["Schwarz","Weiß","Rot","Blau","Grün","Gelb","Rosa","Lila","Braun","Orange","Beige","Grau",
-          "Türkis","Mint","Khaki","Bordeaux","Dunkelblau","Gold","Silber","Bronze","Lavendel","Pfirsich",
-          "Koralle","Oliv","Magenta","Cyan","Violett","Pastellblau"]
-selected_colors = st.sidebar.multiselect(t["colors"], farben)
+# --- Filter-Container ---
+st.markdown("<div class='filter-container'>", unsafe_allow_html=True)
 
-optionale_filter = st.sidebar.checkbox(t["optional"])
-if optionale_filter:
-    muster = st.sidebar.multiselect(t["pattern"], ["Uni", "Gestreift", "Karriert", "Blumen", "Animal"])
-    accessoires = st.sidebar.multiselect(t["accessories"], ["Hut", "Schal", "Tasche", "Schuhe", "Brille"])
+# Geschlecht
+gender = st.selectbox("Geschlecht / Gender:", ["Weiblich","Männlich","Divers","Keine Präferenz"])
 
-# --- Dummy-Outfit-Datenbank ---
-outfits = [
-    {"Name": "Casual Sommer Outfit", "Bild": "bilder/casual1.jpg", "Farben": ["Blau", "Weiß"], "Anlass": ["Casual","Schule"], "Geschlecht":"Beliebig","Jahreszeit":"Sommer"},
-    {"Name": "Business Winter Outfit", "Bild": "bilder/business1.jpg", "Farben": ["Schwarz","Grau"], "Anlass":["Arbeit"], "Geschlecht":"Beliebig","Jahreszeit":"Winter"},
-    {"Name": "Party Look", "Bild": "bilder/party1.jpg", "Farben": ["Rot","Schwarz"], "Anlass":["Party"], "Geschlecht":"Beliebig","Jahreszeit":"Herbst"},
-    # Weitere Outfits hier
-]
+# Saison
+season = st.selectbox("Saison / Season:", ["Frühling","Sommer","Herbst","Winter","Keine Präferenz"])
 
-# --- Outfit Filter ---
-def filter_outfits(outfits):
-    filtered = []
-    for o in outfits:
-        if geschlecht != "Beliebig" and o["Geschlecht"] != geschlecht: continue
-        if jahreszeit != "Beliebig" and o["Jahreszeit"] != jahreszeit: continue
-        if anlass and not any(a in o["Anlass"] for a in anlass): continue
-        if selected_colors and not any(c in o["Farben"] for c in selected_colors): continue
-        filtered.append(o)
-    return filtered
+# Anlass
+occasion = st.multiselect("Anlass / Occasion:", ["Schule","Arbeit","Party","Date","Sport","Freizeit","Andere"])
 
-filtered_outfits = filter_outfits(outfits)
+# Wetter
+weather = st.selectbox("Wetter / Weather:", ["Sonnig","Regnerisch","Schnee","Windig","Keine Präferenz"])
 
-# --- Outfits anzeigen ---
-st.header(t["outfits"])
-if filtered_outfits:
-    for o in filtered_outfits:
-        st.markdown("<div class='outfit-container'>", unsafe_allow_html=True)
-        st.subheader(o["Name"])
-        try:
-            img = Image.open(o["Bild"])
-            st.image(img, use_column_width=True)
-        except:
-            st.text("Bild nicht gefunden")
-        # Farben anzeigen
-        farben_html = "".join([f"<span class='color-box' style='background-color:{c.lower()}' title='{c}'></span>" for c in o["Farben"]])
-        st.markdown(farben_html, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-else:
-    st.write(t["no_outfits"])
+# Temperatur
+temperature = st.slider("Temperatur (°C) / Temperature:", -10,40,(10,25))
 
-# --- Feedback ---
-st.header(t["feedback"])
-feedback = st.text_area(t["feedback_placeholder"])
-if st.button(t["feedback_submit"]):
-    st.success(t["feedback_thanks"])
+# Budget
+budget = st.selectbox("Budget / Budget:", ["€","€€","€€€","Keine Präferenz"])
+
+# Material
+material = st.multiselect("Material / Material:", ["Baumwolle","Wolle","Seide","Leder","Kunstfaser","Denim"])
+
+# Muster
+pattern = st.multiselect("Muster / Pattern:", ["Uni","Gestreift","Kariert","Gemustert","Floral","Andere"])
+
+# Accessoires
+accessories = st.multiselect("Accessoires / Accessories:", ["Schal","Hut","Handtasche","Schmuck","Brille","Keine"])
+
+# Schuhe
+shoes = st.multiselect("Schuhe / Shoes:", ["Sneaker","Stiefel","Sandalen","Loafers","High Heels"])
+
+# Taschen
+bags = st.multiselect("Taschen / Bags:", ["Rucksack","Clutch","Handtasche","Shopper","Keine"])
+
+# Schmuck
+jewelry = st.multiselect("Schmuck / Jewelry:", ["Ohrringe","Kette","Armband","Ringe","Keine"])
+
+# Farben mit Kreisen
+color_options = ["Schwarz","Weiß","Rot","Blau","Gelb","Grün","Orange","Lila","Pink","Beige","Braun","Türkis","Grau","Gold","Silber"]
+selected_colors = st.multiselect("Farben / Colors:", options=color_options)
+color_html = "".join([f"<div class='color-circle' style='background:{c.lower()};'></div>" for c in selected_colors])
+st.markdown(color_html, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# --- Outfit Generator ---
+def generate_outfit():
+    tops = ["T-Shirt","Bluse","Pullover","Hemd","Tanktop","Hoodie"]
+    bottoms = ["Jeans","Rock","Shorts","Hose","Leggings"]
+    shoes_choice = shoes if shoes else ["Sneaker","Stiefel","Sandalen","Loafers","High Heels"]
+    accessories_choice = accessories if accessories else ["Keine"]
+    colors_choice = selected_colors if selected_colors else color_options
+    outfit = {
+        "Oberteil": choice(tops),
+        "Unterteil": choice(bottoms),
+        "Schuhe": choice(shoes_choice),
+        "Accessoire": choice(accessories_choice),
+        "Farbe": choice(colors_choice),
+        "Tasche": choice(bags) if bags else "Keine",
+        "Schmuck": choice(jewelry) if jewelry else "Keine"
+    }
+    return outfit
+
+if st.button("Outfit generieren / Generate Outfit"):
+    outfit = generate_outfit()
+    st.markdown("<div class='outfit-card'>", unsafe_allow_html=True)
+    st.markdown(f"**Oberteil / Top:** {outfit['Oberteil']} ({outfit['Farbe']})")
+    st.markdown(f"**Unterteil / Bottom:** {outfit['Unterteil']} ({outfit['Farbe']})")
+    st.markdown(f"**Schuhe / Shoes:** {outfit['Schuhe']} ({outfit['Farbe']})")
+    st.markdown(f"**Accessoire / Accessory:** {outfit['Accessoire']}")
+    st.markdown(f"**Tasche / Bag:** {outfit['Tasche']}")
+    st.markdown(f"**Schmuck / Jewelry:** {outfit['Schmuck']}")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Feedback
+    feedback = st.text_area("Feedback zu diesem Outfit / Feedback on this outfit:", placeholder="Deine Meinung hier / Your opinion here")
+    if st.button("Feedback absenden / Submit Feedback"):
+        st.success("Danke für dein Feedback / Thanks for your feedback!")
+
+# --- Footer ---
+st.markdown("<p style='text-align:center;color:#888;'>© 2025 Vogue Fashion App</p>", unsafe_allow_html=True)
